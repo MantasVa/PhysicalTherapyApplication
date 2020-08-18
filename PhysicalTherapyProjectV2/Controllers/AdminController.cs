@@ -4,6 +4,7 @@ using PhysicalTherapyProject.Persistance.Infrastructure.Interfaces;
 using PhysicalTherapyProjectV2.Infrastructure;
 using PhysicalTherapyProjectV2.Models.ViewModel;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PhysicalTherapyProjectV2.Controllers
@@ -86,16 +87,17 @@ namespace PhysicalTherapyProjectV2.Controllers
             return RedirectToAction(nameof(ListEvent));
         }
 
-        public async Task<IActionResult> ListArticle() =>
-            View(await _postRepository.GetAllByTypeAsync((int)PostTypes.Article));
 
-        public IActionResult CreateArticle() => View(new PostViewModel
+
+
+
+        public IActionResult CreateTeamMember() => View(new PostViewModel
         {
-            Post = new Post() { PostTypeId = 1 }
+            Post = new Post() { PostTypeId = (int)PostTypes.TeamMember }
         });
 
         [HttpPost]
-        public async Task<IActionResult> CreateArticle(PostViewModel viewmodel)
+        public async Task<IActionResult> CreateTeamMember(PostViewModel viewmodel)
         {
             if (!ModelState.IsValid)
             {
@@ -113,6 +115,82 @@ namespace PhysicalTherapyProjectV2.Controllers
                     {
                         viewmodel.Post.Images.Add(new Image { Content = image });
                     }
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("File Error", ex.Message);
+                    return View(ModelState);
+                }
+
+            }
+
+            if (viewmodel.Post.Id == 0)
+            {
+
+                var created_ent = await _postRepository.InsertAsync(viewmodel.Post);
+                TempData["message"] = $"Informacija apie komandos narį: '{created_ent}' buvo sukurta!";
+            }
+            else
+            {
+                var updated_ent = await _postRepository.UpdateAsync(viewmodel.Post);
+                TempData["message"] = $"Informacija apie komandos narį: '{updated_ent}' buvo redaguota!";
+            }
+
+            return RedirectToAction(nameof(ListTeamMembers));
+        }
+
+        public async Task<IActionResult> ListTeamMembers() =>
+            View(await _postRepository.GetAllByTypeAsync((int)PostTypes.TeamMember));
+
+        [HttpGet]
+        public async Task<IActionResult> EditTeamMembers(int id) =>
+        View(nameof(CreateTeamMember), new PostViewModel()
+        {
+            Post = await _postRepository.GetByIdAsync(id)
+        });
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTeamMembers(int id)
+        {
+            var article = await _postRepository.GetByIdAsync(id);
+            await _postRepository.DeleteAsync(id);
+            TempData["message"] = $"Informacija apie komandos narį '{article.Title}' buvo ištrinta!";
+            return RedirectToAction(nameof(ListTeamMembers));
+        }
+
+
+
+
+
+        public async Task<IActionResult> ListArticle() =>
+            View(await _postRepository.GetAllByTypeAsync((int)PostTypes.Article));        
+
+        public IActionResult CreateArticle() => View(new PostViewModel
+        {
+            Post = new Post() { PostTypeId = (int)PostTypes.Article }
+        });
+
+        [HttpPost]
+        public async Task<IActionResult> CreateArticle(PostViewModel viewmodel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(ModelState);
+            }
+
+            if (viewmodel.Files != null)
+            {
+                try
+                {
+                    ImageParser imageParser = new ImageParser();
+
+                    var imageList = imageParser.ConvertToBytes(viewmodel.Files);
+                    List<Image> images = new List<Image>();
+                    foreach (var image in imageList)
+                    {                        
+                        images.Add(new Image { Content = image });                        
+                    }
+                    viewmodel.Post.Images = images;
                 }
                 catch (Exception ex)
                 {
