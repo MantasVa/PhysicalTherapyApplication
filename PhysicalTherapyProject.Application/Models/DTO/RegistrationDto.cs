@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using PhysicalTherapyProject.Application.Infrastructure.ValidationAttributes;
 
 namespace PhysicalTherapyProject.Application.Models.DTO
 {
@@ -26,8 +28,9 @@ namespace PhysicalTherapyProject.Application.Models.DTO
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Slaptažodžiai Nesutampa")]
         public string ConfirmPassword { get; set; }
-
+        [NotEqual("Pasirinkti", ErrorMessage = "Nepasirinkta Okupacija")]
         public string OccupationId { get; set; }
+        [EnforceTrue(ErrorMessage = "Nesutikote Su Taisyklėmis")]
         public bool AgreedToRules { get; set; }
     }
 }

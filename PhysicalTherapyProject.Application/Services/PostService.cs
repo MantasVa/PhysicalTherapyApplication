@@ -2,21 +2,20 @@
 using PhysicalTherapyProject.Application.Infrastructure.Interfaces;
 using PhysicalTherapyProject.Application.Models.ViewModels;
 using PhysicalTherapyProject.Domain.Models;
+using PhysicalTherapyProject.Persistance.Data;
 using PhysicalTherapyProject.Persistance.Infrastructure.Interfaces;
-using System;
+using PhysicalTherapyProject.Persistance.Repositories;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PhysicalTherapyProject.Application.Services
 {
-    public class PostService : IPostService
+    public class PostService : PostRepository, IPostService
     {
-        private readonly IPostRepository _postRepository;
         private readonly IGenericRepository<Tag> _tagRepository;
         public string ServiceMessage { get; private set; }
-        public PostService(IPostRepository postRepository, IGenericRepository<Tag> tagRepository)
+        public PostService(ApplicationDbContext dbContext, IGenericRepository<Tag> tagRepository) : base(dbContext)
         {
-            _postRepository = postRepository;
             _tagRepository = tagRepository;
         }
 
@@ -27,12 +26,12 @@ namespace PhysicalTherapyProject.Application.Services
             if (viewmodel.Post.Id == 0)
             {
 
-                var created_ent = await _postRepository.AddAsync(viewmodel.Post);
+                var created_ent = await base.AddAsync(viewmodel.Post);
                 ServiceMessage = $"Įrašas: '{created_ent}' buvo sukurtas!";
             }
             else
             {
-                var updated_ent = await _postRepository.UpdateAsync(viewmodel.Post);
+                var updated_ent = await base.UpdateAsync(viewmodel.Post);
                 ServiceMessage = $"Įrašas: '{updated_ent}' buvo redaguotas!";
             }
         }

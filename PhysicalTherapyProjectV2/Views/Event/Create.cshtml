@@ -1,0 +1,93 @@
+﻿@model PostViewModel
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Sukurti Renginį";
+    Layout = "_AdminLayout";
+}
+
+<div class="container">
+    <div style="margin:10px">
+        <h1 class="mt-4">Sukurti Renginį</h1>
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @{
+                var user = UserManager.GetUserAsync(User).Result;
+                string editorName = $"{user.Name} {user.Surname}";
+                if (Model.Post.Id == 0)
+                {
+                    <input type="hidden" asp-for="Post.CreatedBy" value="@editorName" />
+                }
+                else
+                {
+                    <input type="hidden" asp-for="Post.CreatedOn" />
+                    <input type="hidden" asp-for="Post.CreatedBy" />
+                    <input type="hidden" asp-for="Post.UpdatedBy" value="@editorName" />
+                }
+            }
+            <input type="hidden" asp-for="Post.Id" />
+            <input type="hidden" asp-for="Post.PostTypeId" />
+            <input type="hidden" asp-for="Post.Status" value="false" />
+            <input type="hidden" asp-for="CurrentView" value="Create" />
+
+            <div class="form-group">
+                <div><span asp-validation-for="Post.Title" class="text-danger"></span></div>
+                <label asp-for="Post.Title">Pavadinimas<span class="text-danger">*</span>:</label>
+                <input type="text" class="form-control" asp-for="Post.Title" required />
+            </div>
+            <div class="form-group">
+                <label asp-for="Post.Date" class="control-label">Data:</label>
+                <input asp-for="Post.Date" id="datepicker" type="text" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-ddThh:mm")" />
+                <span asp-validation-for="Post.Date" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div><span asp-validation-for="Post.EventPrice" class="text-danger"></span></div>
+                <label asp-for="Post.EventPrice">Kaina (&euro;):</label>
+                <input class="form-control" asp-for="Post.EventPrice" />
+            </div>
+
+            <div class="form-group">
+                <label>Nuotraukos:</label>
+                <input type="file" asp-for="Files" />
+            </div>
+
+            <div class="form-group">
+                <div><span asp-validation-for="Post.Body" class="text-danger"></span></div>
+                <label asp-for="Post.Body">Aprašymas<span class="text-danger">*</span>:</label>
+                <textarea asp-for="Post.Body" class="form-control"></textarea>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-success">Sukurti</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+@section Stylesheets{
+    <script src="https://cdn.tiny.cloud/1/ol12dz8pmm89a37ixbobmdt86ih6wrgzd4pqrjqzwil3ngd3/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+}
+
+@section Scripts{
+    <script>
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+            toolbar_mode: 'floating',
+        });
+    </script>
+    <script>
+        $(function () {
+            console.log("here");
+            $("#datepicker").datepicker();
+        });
+    </script>
+}
+
+
+

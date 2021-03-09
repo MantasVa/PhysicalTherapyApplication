@@ -4,7 +4,7 @@ Physical Therapy is MVC based application used for posting news,events, managing
 
 ## Getting Started
 
-1. Clone project from https://github.com/MantasVa/PhysicalTherapyApplication.
+1. Clone project from https://github.com/Aidanas93/PhysicalTherapyApplication.
 2. Open project solution.
 3. Run „update-database“ command in **Package Manager Console**.
 4. Start **PhysicalTherapyProjectV2** project.

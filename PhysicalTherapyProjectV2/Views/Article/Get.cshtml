@@ -1,45 +1,68 @@
 ﻿@model Post
 @{
-    ViewData["Title"] = "Article";
+    ViewData["Title"] = "Naujiena";
 }
 
 
-<section class="section-features" style="padding-top:30px;">
-    <div class="flex-row">
-        <div class="empty-item-1"></div>
-        <div class="main-item-3">
+<div class="container">
 
-            <div class="index-post post">
-                <h2 class="header-underline" style="font-size:2em;">@Html.Raw(Model.Title)</h2>
-                <div>
-                    <p>
-                        <span class="post-person"><ion-icon name="person-circle-outline"></ion-icon>@Model.CreatedBy</span>
-                        <span class="post-date"><ion-icon name="calendar-outline"></ion-icon>@Model.CreatedOn.ToString("yyyy-MM-dd HH:mm")</span>
-                    </p>
-                </div>
+    <div class="row">
+        <!-- Post Content Column -->
+        <div class="col-lg">
 
+            <!-- Title -->
+            <h1 class="mt-4">@Html.Raw(Model.Title)</h1>
 
+            <!-- Author -->
+            <p class="lead">
+                <i class="fas fa-user"></i> @Model.CreatedBy
+            </p>
 
-                <div class="clear" style="margin-bottom:5px;"></div>
-                <p class="post-body">@Html.Raw(Model.Body)</p>
-                @if (Model.Images != null)
-                {
-                    <div class="gallery" >
+            <hr>
 
-                        @foreach (var image in Model.Images)
-                        {
-                            <a target="_blank" asp-action="Render" asp-controller="Image" asp-route-id="@image.Id ">
-                                <img src="@Url.Action("Render", "Image", new { id = image.Id })"
-                                     alt="@image.CreatedOn" width="600" height="400">
-                            </a>
+            <!-- Date/Time -->
+            <p>
+                <i class="far fa-calendar-alt"></i>
+                @Model.CreatedOn.ToString("f", System.Threading.Thread.CurrentThread.CurrentCulture)
+            </p>
 
-                        }
-                    </div>
-                }
-            </div>
+            <hr>
+
+            <!-- Preview Image -->
+            @if (Model.Images.Count > 0)
+            {
+                <a target="_blank" asp-action="Render" asp-controller="Image" asp-route-id="@Model.Images.First().Id ">
+                    <img src="@Url.Action("Render", "Image", new { id = Model.Images.First().Id })"
+                         alt="@Model.Images.First().CreatedOn" class="img-fluid rounded">
+                </a>
+
+            }
+            else
+            {
+                <img src="~/img/post-image.png" class="img-fluid rounded" alt="Straipsnis nuotraukų neturi">
+            }
+            <hr>
+
+            <!-- Post Content -->
+            <p>@Html.Raw(Model.Body)</p>
         </div>
-        <div class="empty-item-3"></div>
+
     </div>
-</section>
+
+    <div class="row">
+        @if (Model.Images.Count > 1)
+        {
+            @foreach (var image in Model.Images)
+            {
+            <figure class="col-md-4">
+                <a target="_blank" asp-action="Render" asp-controller="Image" asp-route-id="@image.Id ">
+                    <img src="@Url.Action("Render", "Image", new { id = image.Id })"
+                         alt="@image.CreatedOn" class="img-fluid rounded">
+                </a>
+            </figure>
+            }
+        }
+    </div>
+</div>
 
 

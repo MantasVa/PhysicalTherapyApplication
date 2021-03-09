@@ -1,0 +1,81 @@
+﻿@model PostViewModel
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Parašyti Naujieną";
+    Layout = "_AdminLayout";
+}
+
+
+<div class="container">
+    <div style="margin:10px">
+        <h1 class="mt-4">Parašyti Naujieną</h1>
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @{
+                var user = UserManager.GetUserAsync(User).Result;
+                string editorName = $"{user.Name} {user.Surname}";
+                if (Model.Post.Id == 0)
+                {
+                    <input type="hidden" asp-for="Post.CreatedBy" value="@editorName" />
+                }
+                else
+                {
+                    <input type="hidden" asp-for="Post.CreatedOn" />
+                    <input type="hidden" asp-for="Post.CreatedBy" />
+                    <input type="hidden" asp-for="Post.UpdatedBy" value="@editorName" />
+                }
+            }
+            <input type="hidden" asp-for="Post.Id" />
+            <input type="hidden" asp-for="Post.PostTypeId" />
+            <input type="hidden" asp-for="CurrentView" value="Create" />
+
+            <div class="form-group">
+                <div><span asp-validation-for="Post.Title" class="text-danger"></span></div>
+                <label asp-for="Post.Title">Pavadinimas<span class="text-danger">*</span>:</label>
+                <input type="text" class="form-control" asp-for="Post.Title" required />
+            </div>
+
+            <div class="form-group">
+                <label>Nuotraukos:</label>
+                <input type="file" asp-for="Files" multiple="multiple" />
+            </div>
+
+            <div class="form-group">
+                <div><span asp-validation-for="Post.Body" class="text-danger"></span></div>
+                <label asp-for="Post.Body">Turinys<span class="text-danger">*</span>:</label>
+                <textarea asp-for="Post.Body" class="form-control"></textarea>
+            </div>
+
+            <div class="form-group">
+                <select asp-for="TagsId" asp-items="Model.Tags" class="custom-select" multiple>
+                </select>
+            </div>
+
+            <div class="form-group d-inline">
+                <label asp-for="Post.isForAuthenticatedUser">Turinys Registruotiems Vartotojams?</label>
+                <input type="checkbox" asp-for="Post.isForAuthenticatedUser" />
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-success">Sukurti</button>
+            </div>
+        </form>
+    </div>
+</div>
+@section Stylesheets{
+    <script src="https://cdn.tiny.cloud/1/ol12dz8pmm89a37ixbobmdt86ih6wrgzd4pqrjqzwil3ngd3/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+}
+
+@section Scripts{
+    <script>
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+            toolbar_mode: 'floating',
+        });
+    </script>
+}
+
+
+

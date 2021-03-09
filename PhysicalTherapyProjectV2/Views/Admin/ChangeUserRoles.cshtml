@@ -1,0 +1,33 @@
+﻿@model ChangeUserRolesViewModel
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Pakeisti naudotojų roles";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5 col-4">
+    <form method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="SelectedUserId">Naudotojas:</label>
+            <select class="form-control" asp-for="SelectedUserId"
+                    asp-items="@Model.Users">
+                <option>Pasirinkti</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SelectedRoleId">Rolė:</label>
+            <select class="form-control" asp-for="SelectedRoleId"
+                    asp-items="@Model.Roles">
+                <option>Pasirinkti</option>
+            </select>
+        </div>
+
+        <div>
+            <button type="submit" class="btn btn-success">Keisti rolę</button>
+        </div>
+    </form>
+</div>
+

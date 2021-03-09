@@ -1,37 +1,46 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using PhysicalTherapyProject.Application.Infrastructure;
+using PhysicalTherapyProject.Application.Infrastructure.Interfaces;
 using PhysicalTherapyProject.Application.Models.ViewModels;
 using PhysicalTherapyProject.Domain.Models;
-using PhysicalTherapyProject.Persistance.Infrastructure.Interfaces;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace PhysicalTherapyProjectV2.Controllers
 {
-
+    [Authorize(Roles = "Administratorius,Registruotas naudotojas")]
+    [AutoValidateAntiforgeryToken]
     public abstract class BasePostController : Controller
     {
-        protected IPostRepository _postRepository;
-        private int postType;
+        protected IPostService _postService;
+        private int _postType;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public BasePostController(IPostRepository postRepository, int _postType,
+        public BasePostController(IPostService postService, int postType,
             SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
         {
-            _postRepository = postRepository;
-            postType = _postType;
+            _postService = postService;
+            _postType = postType;
             _signInManager = signInManager;
             _userManager = userManager;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> Index()
+        {
+            var posts = await _postService.GetAllByTypeAsync(_postType);
+            posts = posts.OrderByDescending(x => x.CreatedOn).ToList();
+            return View(posts);
         }
 
         [HttpGet]
         [AllowAnonymous]
         public async Task<ActionResult> Get(int id)
         {
-            Post post = await _postRepository.GetByIdAsync(id);
+            Post post = await _postService.GetByIdAsync(id);
 
             bool x = HttpContext.User.Identity.IsAuthenticated;
             if (x || post.isForAuthenticatedUser == false)
@@ -41,73 +50,62 @@ namespace PhysicalTherapyProjectV2.Controllers
             return Unauthorized();
         }
 
-
         [HttpGet]
-        public async Task<ActionResult> Index()
+        [Authorize(Roles = "Administratorius")]
+        public async Task<ActionResult> AdminList()
         {
-            var posts = await _postRepository.GetAllByTypeAsync(postType);
+            var posts = await _postService.GetAllByTypeAsync(_postType);
             posts = posts.OrderByDescending(x => x.CreatedOn).ToList();
             return View(posts);
         }
 
+
         [HttpGet]
-        public ActionResult Create() => View(new PostViewModel
+        [Authorize(Roles = "Administratorius")]
+        public virtual ActionResult Create() => View(new PostViewModel
         {
-            Post = new Post()
+            Post = new Post() { PostTypeId = _postType }
         });
 
         [HttpPost]
-        [ActionName("CreateViewModel")]
+        [Authorize(Roles = "Administratorius")]
         public async Task<ActionResult> Create(PostViewModel viewModel)
         {
             if (!ModelState.IsValid)
             {
-                return View();
+                return View(viewModel.CurrentView, viewModel);
             }
 
-            ImageParser imageParser = new ImageParser();
-            var imageList = imageParser.ConvertToBytes(viewModel.Files);
-
-            foreach (var image in imageList)
+            try
             {
-                viewModel.Post.Images.Add(new Image { Content = image });
+                await _postService.CreatePostAsync(viewModel);
+                TempData["message"] = _postService.ServiceMessage;
             }
-
-            if (viewModel.Post.Id == 0)
+            catch (Exception ex)
             {
-
-                var created_ent = await _postRepository.AddAsync(viewModel.Post);
-                TempData["message"] = $"{created_ent} buvo sukurtas!";
-            }
-            else
-            {
-                var updated_ent = await _postRepository.UpdateAsync(viewModel.Post);
-                TempData["message"] = $"{updated_ent} buvo redaguotas!";
+                ModelState.AddModelError("File Error", ex.Message);
+                return View(viewModel.CurrentView, viewModel);
             }
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "Admin");
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int id) =>
-            View(nameof(Create), new PostViewModel()
-            {
-                Post = await _postRepository.GetByIdAsync(id)
-            });
-
-
+        [Authorize(Roles = "Administratorius")]
+        public virtual async Task<IActionResult> Edit(int id) =>
+          View(nameof(Create), new PostViewModel()
+          {
+            Post = await _postService.GetByIdAsync(id)
+          });
 
         [HttpPost]
+        [Authorize(Roles = "Administratorius")]
         public async Task<IActionResult> Delete(int id)
         {
-            var entity = await _postRepository.DeleteAsync(id);
-
-            if (entity != null)
-            {
-                TempData["message"] = $"{entity} buvo ištrintas!";
-            }
-
-            return RedirectToAction(nameof(Index));
+            var post = await _postService.GetByIdAsync(id);
+            await _postService.DeleteAsync(id);
+            TempData["message"] = $"Įrašas '{post.Title}' buvo ištrintas!";
+            return RedirectToAction("Index", "Admin");
         }
     }
 }

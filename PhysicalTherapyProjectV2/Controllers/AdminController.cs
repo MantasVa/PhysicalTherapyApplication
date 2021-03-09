@@ -1,128 +1,57 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using PhysicalTherapyProject.Application.Infrastructure;
-using PhysicalTherapyProject.Application.Infrastructure.Enums;
-using PhysicalTherapyProject.Application.Infrastructure.Extensions;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using PhysicalTherapyProject.Application.Infrastructure.Interfaces;
 using PhysicalTherapyProject.Application.Models.ViewModels;
 using PhysicalTherapyProject.Domain.Models;
 using PhysicalTherapyProject.Persistance.Infrastructure.Interfaces;
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using PhysicalTherapyProject.Application.Infrastructure.Enums;
 
 namespace PhysicalTherapyProjectV2.Controllers
 {
-    //[Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Administratorius")]
+    [AutoValidateAntiforgeryToken]
     public class AdminController : Controller
     {
-        private readonly IPostRepository _postRepository;
         private readonly IUserRepository _userRepository;
-        private readonly IGenericRepository<Tag> _tagRepository;
+        private readonly IGenericRepository<ApplicationRole> _applicationRole;
+        private readonly IDataExportService _dataExportService;
+        private readonly IUserRoleRepository _userRoleRepository;
+        private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly IPostService _postService;
 
-        public AdminController(IPostRepository postRepository, IUserRepository userRepository,
-            IGenericRepository<Tag> tagRepository, IPostService postService)
+        public AdminController(
+            IUserRepository userRepository,
+            IGenericRepository<ApplicationRole> applicationRole,
+            IDataExportService dataExportService,
+            IUserRoleRepository userRoleRepository,
+            RoleManager<ApplicationRole> roleManager,
+            IPostService postService)
         {
-            _postRepository = postRepository;
             _userRepository = userRepository;
-            _tagRepository = tagRepository;
+            _applicationRole = applicationRole;
+            _dataExportService = dataExportService;
+            _userRoleRepository = userRoleRepository;
+            _roleManager = roleManager;
             _postService = postService;
         }
 
+        [HttpGet("administratoriaus-panelė")]
         public async Task<IActionResult> Index()
         {
-            return View(await _userRepository.GetAllAsync());
-        }
-
-        #region EVENT
-        [HttpGet]
-        public async Task<IActionResult> ListEvent()
-           => View(await _postRepository.GetAllByTypeAsync((int)PostTypes.Event));
-
-        [HttpGet]
-        public IActionResult CreateEvent() => View(new PostViewModel
-        {
-            Post = new Post() { PostTypeId = 2 }
-        });
-
-        [HttpGet]
-        public async Task<IActionResult> EditEvent(int id) =>
-            View(nameof(CreateEvent), new PostViewModel()
+            var posts = await _postService.GetAllAsync();
+            return View( new AdminIndexViewModel
             {
-                Post = await _postRepository.GetByIdAsync(id)
-            });
-
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteEvent(int id)
-        {
-            var article = await _postRepository.GetByIdAsync(id);
-            await _postRepository.DeleteAsync(id);
-            TempData["message"] = $"Renginys '{article.Title}' buvo ištrintas!";
-            return RedirectToAction(nameof(ListEvent));
-        }
-        #endregion
-
-        #region TEAMMEMBER
-        public IActionResult CreateTeamMember() => View(new PostViewModel
-        {
-            Post = new Post() { PostTypeId = (int)PostTypes.TeamMember }
-        });
-
-        public async Task<IActionResult> ListTeamMembers() =>
-            View(await _postRepository.GetAllByTypeAsync((int)PostTypes.TeamMember));
-
-        [HttpGet]
-        public async Task<IActionResult> EditTeamMembers(int id) =>
-        View(nameof(CreateTeamMember), new PostViewModel()
-        {
-            Post = await _postRepository.GetByIdAsync(id)
-        });
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteTeamMembers(int id)
-        {
-            var article = await _postRepository.GetByIdAsync(id);
-            await _postRepository.DeleteAsync(id);
-            TempData["message"] = $"Informacija apie komandos narį '{article.Title}' buvo ištrinta!";
-            return RedirectToAction(nameof(ListTeamMembers));
-        }
-        #endregion
-
-        #region ARTICLE
-        public async Task<IActionResult> ListArticle() =>
-            View(await _postRepository.GetAllByTypeAsync((int)PostTypes.Article));
-
-        public async Task<IActionResult> CreateArticle()
-        {
-            var tags = await _tagRepository.GetAllAsync();
-            return View(new PostViewModel
-            {
-                Post = new Post() { PostTypeId = (int)PostTypes.Article },
-                Tags = tags.ConvertToSelectListItems()
+                Users = await _userRepository.GetAllAsync(),
+                PostsCount = posts.Count(p => p.PostTypeId == (int)PostTypes.Article),
+                EventsCount = posts.Count(p => p.PostTypeId == (int)PostTypes.Event),
+                TeamMembersCount = posts.Count(p => p.PostTypeId == (int)PostTypes.TeamMember)
             });
         }
-
-        [HttpGet]
-        public async Task<IActionResult> EditArticle(int id)
-        {
-            var tags = await _tagRepository.GetAllAsync();
-            return View(nameof(CreateArticle), new PostViewModel()
-            {
-                Post = await _postRepository.GetByIdAsync(id),
-                Tags = tags.ConvertToSelectListItems()
-            });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteArticle(int id)
-        {
-            var article = await _postRepository.GetByIdAsync(id);
-            await _postRepository.DeleteAsync(id);
-            TempData["message"] = $"Straipsnis '{article.Title}' buvo ištrintas!";
-            return RedirectToAction(nameof(ListArticle));
-        }
-        #endregion
 
         #region USER
         [HttpPost]
@@ -131,6 +60,10 @@ namespace PhysicalTherapyProjectV2.Controllers
             var user = await _userRepository.GetByIdAsync(userId);
             user.IsConfirmed = true;
             await _userRepository.UpdateAsync(user);
+
+            var role = await _roleManager.FindByNameAsync("Registruotas naudotojas");
+            await _userRoleRepository.UpdateRole(userId.ToString(), role.Id.ToString());
+
             TempData["message"] = $"{user.Name} {user.Surname} buvo patvirtintas!";
             return RedirectToAction(nameof(Index));
         }
@@ -144,27 +77,54 @@ namespace PhysicalTherapyProjectV2.Controllers
             return RedirectToAction(nameof(Index));
         }
         #endregion
+         
+        #region Change User Roles
 
-        [HttpPost]
-        public async Task<IActionResult> CreatePost(PostViewModel viewmodel)
+        [HttpGet("keisti-roles")]
+        public async Task<IActionResult> ChangeUserRoles()
+        {
+            var changeUserRoleViewModel = new ChangeUserRolesViewModel();
+            changeUserRoleViewModel.ConvertToSelectList((await _userRepository.GetAllAsync()).ToList());
+            changeUserRoleViewModel.ConvertToSelectList((await _applicationRole.GetAllAsync()).ToList());
+            return View(changeUserRoleViewModel);
+        }
+
+        [HttpPost("keisti-roles")]
+        public async Task<IActionResult> ChangeUserRoles(ChangeUserRolesViewModel changeUserRolesViewModel)
         {
             if (!ModelState.IsValid)
             {
-                return View(viewmodel.CurrentView, viewmodel);
+                changeUserRolesViewModel.ConvertToSelectList((await _userRepository.GetAllAsync()).ToList());
+                changeUserRolesViewModel.ConvertToSelectList((await _applicationRole.GetAllAsync()).ToList());
+                return View(changeUserRolesViewModel);
             }
 
-            try
-            {
-                await _postService.CreatePostAsync(viewmodel);
-                TempData["message"] = _postService.ServiceMessage;
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("File Error", ex.Message);
-                return View(viewmodel.CurrentView, viewmodel);
-            }
-
+            await _userRoleRepository.UpdateRole(changeUserRolesViewModel.SelectedUserId, changeUserRolesViewModel.SelectedRoleId);
             return RedirectToAction(nameof(Index));
         }
+
+        #endregion
+
+        #region Users Export
+        [HttpGet("naudotoju-eksportas")]
+        public async Task<IActionResult> ExportUsersViaExcelAsync(bool onlyConfirmedUsers = true)
+        {
+            try
+            {
+                var contentBytes = await _dataExportService.ExportExcelAsync(onlyConfirmedUsers);
+
+                return File(
+                       contentBytes,
+                       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                       "naudotojai.xlsx");
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }            
+        }
+
+        #endregion
+
     }
 }

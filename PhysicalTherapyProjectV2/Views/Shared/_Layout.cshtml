@@ -4,89 +4,93 @@
 <!DOCTYPE html>
 <html lang="lt">
 <head>
-    <link rel="stylesheet" type="text/css" href="~/css/cms-styles.css">
-    <link rel="stylesheet" type="text/css" href="~/vendors/css/normalize.css">
-    <link rel="stylesheet" type="text/css" href="~/vendors/css/grid.css">
-    <link rel="stylesheet" type="text/css" href="~/css/main-style.css">
-    <link rel="stylesheet" type="text/css" href="~/css/AboutUs.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <title>@ViewBag.Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>LKTD - @ViewBag.Title</title>
 </head>
 <body class="site-content html">
 
-
-
     <header>
-        <nav class="sticky">
-            <div class="row">
-                <ion-icon name="body-outline" class="icon-logo-big"></ion-icon>
-
-                <ul class="main-nav">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">Lietuvos KTD</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-md-between" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a asp-controller="Home" asp-action="Index" class="nav-link">Pradinis</a>
+                    </li>
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <li><a asp-action="Index" asp-controller="Article">Naujienos</a></li>
-                        <li><a asp-action="Index" asp-controller="Event">Renginiai</a></li>
-                        @if (this.User.IsInRole("Administrator"))
+                        <li class="nav-item">
+                            <a asp-action="PagedIndex" asp-controller="Article"
+                               asp-route-pageNumber="1" class="nav-link">Naujienos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-action="Index" asp-controller="Event" 
+                               class="nav-link">Renginiai</a>
+                        </li>
+                        @if (this.User.IsInRole("Administratorius"))
                         {
-                            <li><a asp-action="Index" asp-controller="Admin">Admin</a></li>
+                            <li class="nav-item">
+                                <a asp-action="Index" asp-controller="Admin" class="nav-link">Administratoriaus panelė</a>
+                            </li>
                         }
+
                     }
-                    <li><a asp-controller="Home" asp-action="AboutUs">Apie Mus</a></li>
+                    <li class="nav-item">
+                        <a asp-controller="Home" asp-action="AboutUs" class="nav-link">Apie Mus</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
                     <partial name="_LoginPartial" />
                 </ul>
             </div>
         </nav>
     </header>
 
-    <div class="render-body">
+    <div>
         @RenderBody()
     </div>
 
-    <footer class="footer">
-        <div class="row">
-
-
-            <ul class="footer-nav">
-                <li><a asp-controller="Home" asp-action="Privacy">Privatumo Politika</a></li>
-                <li><a href="#">Bendradarbiavimas</a></li>
-                <li><a href="#">Įsakymai Ir Įstatymai</a></li>
-                <li>
-
-                </li>
-            </ul>
-
-        </div>
-        <div class="row">
-            <div class="contact">
-                <p>Kontaktai:</p>
-                <p>El.Paštas: lietuvosktd@gmail.com</p>
-                <p>Adresas : Eivenių g. 2, Kaunas.</p>
-                <p>
-                    Mus galite rasti facebook:
-                    <a href="https://www.facebook.com/Lietuvosktd/" target="_blank">
+        <footer class="pt-4 my-md-5 pt-md-5 border-top container">
+            <div class="row">
+                <div class="col-sm ml-5">
+                    <p>
+                        Copyright &copy; 2020, Lietuvos kineziterapeutų draugija
+                    </p>
+                    
+                </div>
+                <div class="col-sm ml-5">
+                    <p>Kontaktai:</p>
+                    <p>El.Paštas: lietuvosktd@gmail.com</p>
+                    <p>Adresas : Eivenių g. 2, Kaunas.</p>
+                </div>
+                <div class="col-sm ml-5">
+                    <p> Mus galite rasti facebook: <a href="https://www.facebook.com/Lietuvosktd/" target="_blank">
                         <ion-icon name="logo-facebook" class="facebook-icon"></ion-icon>
-                    </a>
-                </p>
+                    </a></p>
+
+                    <p>
+                        <a asp-action="Privacy" asp-controller="Home" class="nav-link">Privatumo politika</a>
+                    </p>
+                </div>
             </div>
-        </div>
-
-
-
-        <div class="row">
-            <p>
-                Copyright &copy; 2020, Lietuvos kineziterapeutų draugija
-            </p>
-        </div>
-    </footer>
+        </footer>
 
     <script src="~/vendors/js/jquery.min.js"></script>
     <script src="https://unpkg.com/ionicons@5.0.0/dist/ionicons.js"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="~/vendors/js/jquery.waypoints.min.js"></script>
     <script src="~/js/script.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

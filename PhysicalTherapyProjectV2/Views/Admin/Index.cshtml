@@ -1,51 +1,49 @@
-﻿@model IEnumerable<ApplicationUser>
+﻿@model AdminIndexViewModel
 @{
     ViewData["Title"] = "Index";
     Layout = "_AdminLayout";
 }
 
 
-<div id="layoutSidenav_content">
+<div id="layoutSidenav_content" style="margin-top:25px;">
     <main>
         <div class="container-fluid">
-            <h1 class="mt-4">Apžvalga</h1>
             <ol class="breadcrumb mb-4">
-                <li class="breadcrumb-item active">Dashboard</li>
+                <li class="breadcrumb-item active">Apžvalga</li>
             </ol>
             <div class="row">
                 <div class="col-xl-3 col-md-6">
-                    <div class="card bg-primary text-white mb-4">
-                        <div class="card-body">Primary Card</div>
+                    <div class="card bg-light mb-4">
+                        <div class="card-body text-center"><span class="display-4">@Model.Users.Count()</span> Vartotojų</div>
                         <div class="card-footer d-flex align-items-center justify-content-between">
-                            <a class="small text-white stretched-link" href="#">View Details</a>
-                            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                            <a class="small stretched-link"  >@Model.Users.Count(x => x.IsConfirmed) Patvirtinti Vartotojai</a>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
-                    <div class="card bg-warning text-white mb-4">
-                        <div class="card-body">Warning Card</div>
+                    <div class="card bg-light mb-4">
+                        <div class="card-body text-center"><span class="display-4">@Model.PostsCount</span> Straipsnių</div>
                         <div class="card-footer d-flex align-items-center justify-content-between">
-                            <a class="small text-white stretched-link" href="#">View Details</a>
-                            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                            <a class="small stretched-link" asp-controller="Article" asp-action="AdminList" >Plačiau</a>
+                            <div class="small"><i class="fas fa-angle-right"></i></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
-                    <div class="card bg-success text-white mb-4">
-                        <div class="card-body">Success Card</div>
+                    <div class="card bg-light mb-4">
+                        <div class="card-body text-center"><span class="display-4">@Model.EventsCount</span> Renginių</div>
                         <div class="card-footer d-flex align-items-center justify-content-between">
-                            <a class="small text-white stretched-link" href="#">View Details</a>
-                            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                            <a class="small stretched-link" asp-controller="Event" asp-action="AdminList" >Plačiau</a>
+                            <div class="small"><i class="fas fa-angle-right"></i></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-xl-3 col-md-6">
-                    <div class="card bg-danger text-white mb-4">
-                        <div class="card-body">Danger Card</div>
+                    <div class="card bg-light mb-4">
+                        <div class="card-body text-center"><span class="display-4">@Model.TeamMembersCount</span> Komandos nariai</div>
                         <div class="card-footer d-flex align-items-center justify-content-between">
-                            <a class="small text-white stretched-link" href="#">View Details</a>
-                            <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                            <a class="small stretched-link" asp-controller="TeamMember" asp-action="AdminList">Plačiau</a>
+                            <div class="small"><i class="fas fa-angle-right"></i></div>
                         </div>
                     </div>
                 </div>
@@ -56,62 +54,85 @@
                 <partial name="_AlertBoxPartial" model="@TempData["message"].ToString()" />
             }
 
-            <div class="card mb-4">
-                <div class="card-header"><i class="fas fa-table mr-1"></i>Svetainės Vartotojai</div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th>Vardas</th>
-                                    <th>Pavardė</th>
-                                    <th>El. Paštas</th>
-                                    <th>Pareigos</th>
-                                    <th>Ar Patvirtintas</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tfoot>
-                                <tr>
-                                    <th>Vardas</th>
-                                    <th>Pavardė</th>
-                                    <th>El. Paštas</th>
-                                    <th>Pareigos</th>
-                                    <th>Ar Patvirtintas</th>
-                                </tr>
-                            </tfoot>
-                            <tbody>
-                                @foreach (var user in Model)
-                                {
-                                    <tr>
-                                        <td>@user.Name</td>
-                                        <td>@user.Surname</td>
-                                        <td>@user.Email</td>
-                                        <td>@user.Occupation.Name</td>
-                                        <td>
-                                            @if (user.IsConfirmed == true)
-                                            {
-                                                <p>Patvirtintas</p>
-                                            }
-                                            else if (user.IsConfirmed == false)
-                                            {
-                                                <form asp-action="ConfirmUser" asp-controller="Admin" asp-route-userId="@user.Id" method="post">
-                                                    <input class="btn btn-primary btn-block" type="submit" value="Patvirtinti" />
-                                                </form>
-                                            }
-                                        </td>
-                                        <td>
-                                            <form asp-action="DeleteUser" asp-controller="Admin" asp-route-userId="@user.Id" method="post">
-                                                <input class="btn btn-danger btn-block" type="submit" value="Ištrinti" />
-                                            </form>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="row">
+                    <div class="dropdown">
+                        <i class="fas fa-table mr-1"></i>Svetainės Vartotojai
+                        <button class="btn btn-outline-primary dropdown-toggle"
+                                type="button" id="dropdownMenuButton" data-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false"
+                                style="margin-left: 10px;">
+                            Naudotojų Eksportas
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" asp-action="ExportUsersViaExcel" asp-route-onlyConfirmedUsers="true" asp-controller="Admin">Patvirtinti</a>
+                            <a class="dropdown-item" asp-action="ExportUsersViaExcel" asp-route-onlyConfirmedUsers="false" asp-controller="Admin">Visi</a>
+                        </div>
+                    </div>
+                    <div class="ml-2">
+                        <a class="btn btn-outline-primary text-black-50" asp-controller="Admin" asp-action="ChangeUserRoles">
+                            Keisti naudotojų roles
+                        </a>
                     </div>
                 </div>
+                
+                  
             </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Vardas</th>
+                                <th>Pavardė</th>
+                                <th>El. Paštas</th>
+                                <th>Pareigos</th>
+                                <th>Ar Patvirtintas</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th>Vardas</th>
+                                <th>Pavardė</th>
+                                <th>El. Paštas</th>
+                                <th>Pareigos</th>
+                                <th>Ar Patvirtintas</th>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            @foreach (var user in Model.Users)
+                            {
+                                <tr>
+                                    <td>@user.Name</td>
+                                    <td>@user.Surname</td>
+                                    <td>@user.Email</td>
+                                    <td>@user.Occupation.Name</td>
+                                    <td>
+                                        @if (user.IsConfirmed == true)
+                                        {
+                                            <p>Patvirtintas</p>
+                                        }
+                                        else if (user.IsConfirmed == false)
+                                        {
+                                            <form asp-action="ConfirmUser" asp-controller="Admin" asp-route-userId="@user.Id" method="post">
+                                                <input class="btn btn-outline-primary text-black-50" type="submit" value="Patvirtinti" />
+                                            </form>
+                                        }
+                                    </td>
+                                    <td>
+                                        <form asp-action="DeleteUser" asp-controller="Admin" asp-route-userId="@user.Id" method="post">
+                                            <input class="btn btn-outline-primary text-black-50" type="submit" value="Ištrinti" />
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         </div>
     </main>
 

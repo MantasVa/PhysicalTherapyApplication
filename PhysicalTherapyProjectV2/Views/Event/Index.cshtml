@@ -4,43 +4,30 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<section class="section-features" style="padding-top:30px;">
-    <div class="flex-row">
-
-        <div class="empty-item-1"></div>
-        <div class="main-item-3">
-
-
-            <h2 class="header-underline" style="font-size:2em;">Būsimi Renginiai:</h2>
-
-            <div style="display:flex;flex-direction:row;">
-                @foreach (var post in Model)
-                {
-                    @if (post.Date > DateTime.Now)
-                    {
-                        var item = post.Body.Length <= 100 ? post.Body : post.Body.Substring(0, 100) + "...";
-                        <div class="card" style="width: 18rem;margin:10px;">
-                            @if (post.Images.Count > 0)
-                            {
-                                <img class="card-img-top" src="@Url.Action("Render", "Image", new { id = post.Images.First().Id })">
-
-                            }
-
-                            <div class="card-body">
-                                <h5 class="card-title">@Html.Raw(post.Title)</h5>
-                                <small class="card-subtitle">@post.Date</small>
-                                <p class="card-text">@Html.Raw(post.Body)</p>
-                                <a asp-action="Get" asp-route-id="@post.Id" class="btn btn-ghost">Daugiau</a>
-                            </div>
-                        </div>
-                    }
-                }
-            </div>
-
-
-        </div>
-        <div class="empty-item-3"></div>
-
-
+<div class="container mt-5">
+    <div class="text-center" style="margin:60px 0px 40px 0px;">
+        <h1 class="display-4">Būsimi Renginiai</h1>
     </div>
-</section>
+    @foreach (var post in Model)
+    {
+        @if (post.Date > DateTime.Now && post.Status == true)
+        {
+            var item = post.Body.Length <= 100 ? post.Body : post.Body.Substring(0, 100) + "...";
+            <div class="card mb-3">
+                @if (post.Images.Count > 0)
+                {
+                    <img class="card-img-top" src="@Url.Action("Render", "Image", new { id = post.Images.First().Id })" alt="Card image cap">
+                }
+
+                <div class="card-body">
+                    <h5 class="card-title">@Html.Raw(post.Title)</h5>
+                    <p class="card-text">@Html.Raw(post.Body)</p>
+                    <p class="card-text">Renginio data: @post.Date</p>
+                    <p class="card-text">Renginio kaina: @post.EventPrice &euro;</p>
+                    <a href="#" class="btn btn-success">Užsiregistruok</a>
+                </div>
+            </div>
+        }
+
+    }
+</div>

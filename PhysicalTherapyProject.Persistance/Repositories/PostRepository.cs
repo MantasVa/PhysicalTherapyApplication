@@ -17,12 +17,14 @@ namespace PhysicalTherapyProject.Persistance.Repositories
 
         public async Task<ICollection<Post>> GetAllByTypeAsync(int id)
             => await _applicationDbContext.Posts
-            .Include(post => post.PostType)
-            .Include(post => post.PostUser)
-            .Include(post => post.Images)
-            .Where(post => post.PostType.Id == id)
-            .OrderByDescending(post => post.CreatedOn)
-            .ToListAsync();
+                .Include(post => post.PostType)
+                .Where(post => post.PostType.Id == id)
+                .Include(post => post.PostUser)
+                .Include(post => post.Images)
+                .Include(post => post.PostTags)
+                .ThenInclude(postTags => postTags.Tag)
+                .OrderByDescending(post => post.CreatedOn)
+                .ToListAsync();
 
         public override async Task<Post> UpdateAsync(Post entry)
         {

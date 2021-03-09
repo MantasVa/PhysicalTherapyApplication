@@ -13,6 +13,7 @@ namespace PhysicalTherapyProjectV2.Controllers
             _imageRepository = imageRepository;
         }
 
+        [HttpGet("nuotrauka/{id}")]
         public async Task<IActionResult> Render(int id)
         {
             var image = await _imageRepository.GetByIdAsync(id);

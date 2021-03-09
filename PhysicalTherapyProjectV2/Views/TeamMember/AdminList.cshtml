@@ -1,0 +1,63 @@
+﻿@model IEnumerable<Post>
+@{
+    ViewData["Title"] = "Komandos Nariai";
+    Layout = "_AdminLayout";
+}
+<div class="mt-5">
+    <main>
+        <div class="container-fluid">
+            
+            @if (TempData.ContainsKey("message"))
+            {
+                <partial name="_AlertBoxPartial" model="@TempData["message"].ToString()" />
+            }
+
+            <div class="card mb-4">
+                <div class="card-header"><i class="fas fa-table mr-1"></i>Komandos narių sąrašas</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Vardas, Pavardė</th>
+                                    <th>Informacija</th>
+                                    <th>Redaguoti</th>
+                                    <th>Ištrinti</th>
+                                </tr>
+                            </thead>
+                            <tfoot>
+                                <tr>
+                                    <th>Vardas, Pavardė</th>
+                                    <th>Informacija</th>
+                                    <th>Redaguoti</th>
+                                    <th>Ištrinti</th>
+                                </tr>
+                            </tfoot>
+                            <tbody>
+                                @foreach (var member in Model)
+                                {
+                                    <tr>
+                                        <td>@member.Title</td>
+                                        <td>@member.Body</td>                                        
+                                        <td>
+                                            <a class="btn btn-outline-primary text-black-50"
+                                               asp-action="Edit" asp-route-id="@member.Id">Redaguoti</a>
+                                        </td>
+                                        <td>
+                                            <form method="post" asp-action="Delete" asp-route-id="@member.Id">
+                                                <input type="submit" class="btn btn-outline-primary text-black-50" 
+                                                       value="Ištrinti" />
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</div>
+

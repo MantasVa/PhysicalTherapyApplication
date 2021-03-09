@@ -141,7 +141,17 @@ namespace PhysicalTherapyProject.Persistance.Infrastructure.Extensions
                 new ApplicationRole()
                 {
                     Id = 1,
-                    Name = "Administrator"
+                    Name = "Administratorius"
+                },
+                new ApplicationRole()
+                {
+                    Id = 2,
+                    Name = "Naudotojas"
+                },
+                new ApplicationRole()
+                {
+                    Id = 3,
+                    Name = "Registruotas naudotojas"
                 }
             );
 

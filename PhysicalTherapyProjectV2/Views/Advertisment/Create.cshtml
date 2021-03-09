@@ -2,18 +2,20 @@
 @{
     ViewData["Title"] = "Create";
 }
+<div class="container">
+    <h1>Pridėti naują remėją</h1>
 
-<h1>Create</h1>
+    <form asp-action="Create" method="post">
+        <input type="hidden" asp-for="Id" />
 
-<form asp-action="Create" method="post">
-    <input type="hidden" asp-for="Id" />
+        <label asp-for="Title">Title:</label>
+        <input type="text" asp-for="Title" />
 
-    <label asp-for="Title">Title:</label>
-    <input type="text" asp-for="Title" />
+        @*<label asp-for="@Model.Images[0].Name">Image:</label>
+            <input type="text" asp-for="Images" />*@
 
-    @*<label asp-for="@Model.Images[0].Name">Image:</label>
-        <input type="text" asp-for="Images" />*@
+        <button type="submit" class="btn btn-success">Create</button>
+    </form>
+</div>
 
-    <button type="submit" class="btn btn-success">Create</button>
-</form>
 

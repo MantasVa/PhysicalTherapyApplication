@@ -8,9 +8,13 @@ using PhysicalTherapyProject.Domain.Models;
 using PhysicalTherapyProject.Persistance.Infrastructure.Interfaces;
 using System;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Routing;
 
 namespace PhysicalTherapyProjectV2.Controllers
 {
+    [AutoValidateAntiforgeryToken]
     public class AuthorizationController : Controller
     {
         private readonly IMapper _mapper;
@@ -25,12 +29,13 @@ namespace PhysicalTherapyProjectV2.Controllers
             _signInManager = signInManager;
             _userRepository = userRepository;
         }
+        [HttpGet("registracija")]
         public IActionResult Registration()
         {
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("registracija")]
         public async Task<IActionResult> Registration(RegistrationDto userModel)
         {
             if (!ModelState.IsValid)
@@ -39,29 +44,39 @@ namespace PhysicalTherapyProjectV2.Controllers
             }
 
             var user = _mapper.Map<ApplicationUser>(userModel);
+            user.EmailConfirmationToken = Guid.NewGuid();
 
             var result = await _userManager.CreateAsync(user, userModel.Password);
 
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.TryAddModelError(error.Code, error.Description);
-                }
+            //if (!result.Succeeded)
+            //{
+                
+            //    foreach (var error in result.Errors)
+            //    {
+            //        if(!ModelState.ContainsKey("EmailExists") && error.Description.EndsWith("is already taken."))
+            //            ModelState.TryAddModelError("EmailExists", "Naudotojas su tokiu el. paštu jau egzistuoja.");
+            //        else
+            //            ModelState.TryAddModelError(error.Code, error.Description);
+            //    }
 
-                return BadRequest();
+            //    return View(userModel);
 
-            }
+            //}
+            await _userManager.AddToRoleAsync(user, "Naudotojas");
+
+            SendAccountConfirmation(user.Email, user.EmailConfirmationToken.ToString());
 
             return RedirectToAction(nameof(Login));
         }
 
+        [HttpGet("prisijungimas")]
         public IActionResult Login()
         {
             return View();
         }
 
-        [HttpPost]
+
+        [HttpPost("prisijungimas")]
         public async Task<IActionResult> Login(LoginDto loginModel)
         {
             if (!ModelState.IsValid)
@@ -70,6 +85,18 @@ namespace PhysicalTherapyProjectV2.Controllers
             }
 
             var user = await _userRepository.GetByEmailAsync(loginModel.Email);
+
+            //if (!user.EmailConfirmed)
+            //{
+            //    if (!user.EmailConfirmationToken.HasValue)
+            //    {
+            //        user.EmailConfirmationToken = Guid.NewGuid();
+            //        await _userManager.UpdateAsync(user);
+            //    }
+
+            //    SendAccountConfirmation(user.Email, user.EmailConfirmationToken.ToString());
+            //    return RedirectToAction(nameof(ConfirmUserEmail));
+            //}
 
             var result = await _signInManager.PasswordSignInAsync(loginModel.Email, loginModel.Password, loginModel.RememberMe, false);
 
@@ -80,15 +107,16 @@ namespace PhysicalTherapyProjectV2.Controllers
                 return View(loginModel);
             }
 
-            return RedirectToAction(nameof(Index), "Article");
+            return Redirect("straipsniai/puslapis/1");            
         }
 
+        [HttpGet("slaptazodzio-priminimas")]
         public IActionResult ForgotPassword()
         {
             return View();
         }
 
-        [HttpPost]
+        [HttpPost("slaptazodzio-priminimas")]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordDto model)
         {
@@ -165,7 +193,44 @@ namespace PhysicalTherapyProjectV2.Controllers
             return View(model);
         }
 
-        [HttpGet]
+        [HttpGet("slaptazodzio-pakeitimas")]
         public IActionResult ResetPasswordConfirmation() => View();
+        
+        [HttpGet("patvirtinti-pasta")]
+        public IActionResult ConfirmUserEmail()
+        {
+            return View();
+        }
+
+        [HttpGet("pasto-patvirtinimas")]
+        public async Task<IActionResult> ConfirmEmail(string email, string token)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if(user != null)
+            {
+                Guid tokenGuid;
+                if(Guid.TryParse(token, out tokenGuid))
+                {
+                    if (user.EmailConfirmationToken == tokenGuid)
+                    {
+                        user.EmailConfirmed = true;
+                        await _userManager.UpdateAsync(user);
+
+                        return RedirectToAction(nameof(Login));
+                    }
+                }                
+            }   
+
+            return View();
+        }
+        private void SendAccountConfirmation(string email, string token)
+        {
+            var accountCofirmLink = Url.Action(nameof(ConfirmEmail), "Authorization",
+                            new { email = email, token = token }, Request.Scheme);
+
+            EmailHandler.Send(email, "LKA paskyros patvirtinimas", $"Spauskite: {accountCofirmLink}");
+        }
+
     }
 }

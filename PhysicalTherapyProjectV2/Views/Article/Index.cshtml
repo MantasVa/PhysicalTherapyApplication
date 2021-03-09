@@ -1,44 +1,50 @@
-﻿@model IEnumerable<Post>
+﻿@model IList<Post>
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Naujienos";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<section class="section-features" style="padding-top:30px;">
-    <div class="flex-row">
+<div class="container mt-5">
 
-        <div class="empty-item-1"></div>
-        <div class="main-item-3">
+    @for (int i = 0; i < Model.Count(); i++)
+    {
+        var postBody = Model[i].Body.Length <= 500 ? Model[i].Body : Model[i].Body.Substring(0, 500) + "...";
+        <div class="row">
+            <div class="col-xl-4">
+                @if (Model[i].Images.Count > 0)
+                {
+                    <a asp-controller="Article" asp-action="Get" asp-route-id="@Model[i].Id">
+                        <img src="@Url.Action("Render", "Image", new { id = Model[i].Images.First().Id })"
+                             alt="@Model[i].Images.First().CreatedOn" class="img-fluid">
+                    </a>
 
-
-            <h2 class="header-underline" style="font-size:2em;">Naujausi Įrašai</h2>
-            @foreach (var post in Model)
-            {
-                
-                    var item = post.Body.Length <= 500 ? post.Body : post.Body.Substring(0, 500) + "...";
-
-                    <div class="index-post post" onmouseover="highlightPost(this)" onmouseout="removeHighlight(this)">
-                        <h2>@Html.Raw(post.Title)</h2>
-                        <div>
-                            <p>
-                                <span class="post-person"><ion-icon name="person-circle-outline"></ion-icon>@post.CreatedBy</span>
-                                <span class="post-date"><ion-icon name="calendar-outline"></ion-icon>@post.CreatedOn.ToString("yyyy-MM-dd HH:mm")</span>
-                            </p>
-                        </div>
-                        <div class="clear" style="margin-bottom:5px;"></div>
-                        <p class="post-body">@Html.Raw(post.Body)</p>
-                        <a class="btn btn-ghost post-btn" asp-action="Get" asp-controller="Article" asp-route-id="@post.Id">Daugiau</a>
-                    </div>
-                
-            }
-
-
+                }
+                else
+                {
+                    <a asp-controller="Article" asp-action="Get" asp-route-id="@Model[i].Id">
+                                        <img src="~/img/post-image.png" class="img-fluid"></a>
+                }
+            </div>
+            <div class="col-xl-8">
+                <h3 class="title">@Html.Raw(Model[i].Title)</h3>
+                <p class="text-muted"><i class="far fa-calendar-alt"></i> @Model[i].CreatedOn.ToString("f", System.Threading.Thread.CurrentThread.CurrentCulture)</p>
+                <p>@Html.Raw(postBody)</p>
+                <div class="d-flex justify-content-between">
+                    <p class="text-muted"><i class="fas fa-user"></i> @Model[i].CreatedBy </p>
+                    <a asp-controller="Article" asp-action="Get" asp-route-id="@Model[i].Id"
+                       class="btn btn-outline-dark">
+                        Daugiau
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="empty-item-3"></div>
+        @if (i + 1 != Model.Count())
+        {
+            <hr>
+        }
+    }
 
-
-    </div>
-</section>
+</div>
 
 
 
